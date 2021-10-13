@@ -1,4 +1,5 @@
 import sys
+import os.path
 PACKAGE_PATH = "/home/jbraun/projects/longterm"
 sys.path.append(PACKAGE_PATH)
 
@@ -42,7 +43,9 @@ params.denoise_crop_size = (352, 576)
 params.denoise_train_each_trial = False
 params.denoise_train_trial = 0
 params.denoise_correct_illumination_leftright = True
-params.denoise_final_dir = "denoising_run"
+params.denoise_final_dir = "denoising_run_correct"
+params.denoise_tmp_data_dir = os.path.join(os.path.expanduser("~"), "tmp", "deepinterpolation", "data")
+params.denoise_tmp_run_dir = os.path.join(os.path.expanduser("~"), "tmp", "deepinterpolation", "runs")
 
 # dff params
 params.dff_common_baseline = True
