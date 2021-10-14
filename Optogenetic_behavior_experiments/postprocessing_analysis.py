@@ -25,6 +25,253 @@ def get_exp_folders(parent_folder):
     
     return dirs
 
+def compute_av_stim_frame(experiments_stim_frames): 
+    
+    """
+    Compute the average frame accross the flies were te stimulation starts
+    and end
+    """
+   
+    av_stim_frame = {}
+    
+    for i, expe_stim_frame in enumerate(experiments_stim_frames):
+        for stim in expe_stim_frame:
+            if "on" in stim:
+                if i == 0:
+                    av_stim_frame[stim] = [expe_stim_frame[stim]]
+                else:
+                    av_stim_frame[stim].append(expe_stim_frame[stim])
+
+    return av_stim_frame
+
+
+def plot_velocity(line, stats, times, fpss, experiments_stim_frames, age, stimulation_type="p6-0", off_period_keep=30, stat_name="Translational velocities", unit = "[mm/s]", ZOOM=False, ConfInt=False, confidence=0.95, step_int_conf=2, create_fig=True, create_ax=True, color = "b"):
+    
+        """
+        The function plot the statistic given in the parameter vs  time. 
+        It shows the average trace and all taces vs time.
+        The ZOOM parameter enable to display zooms on the stimulation periods
+        The ConfInt parameter enable the display of confidence interval
+        (computed on bootstrap samples)
+        
+        Parameters:
+        ----------
+        stats: list
+            The statistics for each fly to plot (lines are flies, columns are frames)
+        
+        times: list 
+            The times point where the statistic was computed
+        
+        fpss: list
+            The fps for each fly
+        
+        off_period_keep: float
+            The period to keep after and before the stimulation in seconds
+        
+        experiments_stim_frames: dict
+            Vector of dictionary containing all stimulation start and stop frames 
+        
+        stimulation_type: string
+            Stimultion protocol to selct flies on can be p1-0 or p6-0
+        
+        line: int
+            The fly line to study in self.parameter["lines"] (int)
+        
+        stat_name: string
+            The name of the statistic ploted for nice graph
+        
+        unit: string
+            Unit of the statistic for nice graphs 
+        
+        ZOOM: bool
+            If True the plot is composed of subplots with the global view and
+            a zoom on each stimulations 
+        
+        ConfInt: bool
+            If true the plot shows the mean statistc and the confidence interval
+            at level confidence of the mean (computed using bootstrapping) 
+        
+        confidence: float
+            Confidence level of the confidence interval, 
+        
+        step_int_conf: int
+            Since bootstraping can be long the CI is only computed each step_int_conf points
+        
+        (used mainly to plot multiple traces in the same figure)    
+        fig: matplotlib figure
+            The figure to  plot the statistic on if False it is generated in the function
+        
+        ax: matplotlib axis
+            The axis to  plot the statistic on if False it is generated in the function
+        
+        color: matplotlib color
+            The color of the statistic trace
+        
+        Returns:
+        plot_name: string
+            Name of the plot (used mainly to plot multiple traces in the same figure)  
+        
+        Plots the time serie and in case of fig=False save the figure in the 
+        figure folder specified in the yaml file
+            
+        """
+        if not fpss:
+            return
+
+        try:
+            frame_off_keep = off_period_keep*fpss[0]
+            mean_vel = np.nanmean(stats, axis=0)
+            nb_frames = np.shape(times)[1]
+        
+            av_stim_frame = compute_av_stim_frame(experiments_stim_frames)
+            flag = False
+            line_split = line.split('/')
+            line_name = line_split[-2] + '-' + line_split[-1]
+        except Exception as e:
+            print(e)
+            return
+                
+        if ZOOM:
+
+            n_plots = len(av_stim_frame)+1
+            
+            if create_fig and create_ax:
+                fig, ax = plt.subplots(nrows=n_plots, ncols=1, figsize=(14,7*n_plots))
+                flag = True
+                ax[0].set_title("{} of flies from strain {} stimulation {} as a function of time \n".format(stat_name, line_name, stimulation_type), fontsize=22)
+            
+            ax[0].plot(times[0], mean_vel, linewidth=2, color = color, label=line_name+" "+stimulation_type)
+            ax[0].plot(np.transpose(times), np.transpose(stats), alpha = 0.25, color = "gray")
+            ax[0].set_xlabel("Time [s]") 
+            ax[0].set_ylabel("{} [{}]".format(stat_name, unit)) 
+            ax[0].set_ylim(-20,20)
+
+            av_stim_frame_mod={}
+            for stim in av_stim_frame:
+                av_stim_frame_mod[stim] = np.round(np.mean(av_stim_frame[stim], axis=0))
+                ax[0].axvspan(times[0][int(av_stim_frame_mod[stim][0])], times[0][int(av_stim_frame_mod[stim][1])], alpha=0.1, color='red')
+            ax[0].grid()
+            
+            for stim, ax in zip(av_stim_frame_mod, ax[1:]):
+                
+                start_stim = int(av_stim_frame_mod[stim][0])
+                stop_stim = int(av_stim_frame_mod[stim][1])
+                
+                start_plot = start_stim-frame_off_keep
+                if start_plot < 0:
+                    start_plot = 0
+                    
+                stop_plot = stop_stim+frame_off_keep
+                if stop_plot > len(times[0]):
+                    stop_plot = -1
+                
+                ax.axvspan(times[0][start_stim], times[0][stop_stim], alpha=0.1, color='red', label=stim)
+                ax.plot(times[0][start_plot:stop_plot], mean_vel[start_plot:stop_plot], linewidth=2, color = color, label=line_name)
+                ax.plot(np.transpose(times)[start_plot:stop_plot], np.transpose(stats)[start_plot:stop_plot], color = "gray", alpha = 0.25)
+                if flag:
+                    ax.set_title("Zoom on stimulation period {}".format(stim))
+                ax.set_xlabel("Time [s]") 
+                ax.set_ylabel("{} [{}]".format(stat_name, unit))  
+                ax.set_ylim(-20,20)
+                ax.set_xlim((start_stim-frame_off_keep)/fpss[0], (stop_stim+frame_off_keep)/fpss[0])
+                ax.grid()
+            
+            #plot_name = "{}_{}_plot_{}.png".format(line_name, stimulation_type, stat_name)
+            plot_name = "{}_{}_plot_{}.eps".format(line_name, stimulation_type, stat_name)    
+            
+            if flag:
+                folder_name = os.path.join("results", 'Velocities_traces')
+                if not os.path.exists(folder_name):
+                    os.makedirs(folder_name)
+                fig.savefig(os.path.join(folder_name, plot_name), dpi=300, bbox_inches='tight')
+                plt.close()
+                flag = False
+                
+        if ConfInt:
+            if create_fig and create_ax:
+                fig, ax = plt.subplots(figsize=(14,7))
+                flag = True
+                
+            n_flies = len(stats)
+            
+            stats_t = np.array(stats).T
+            
+            conf_int = []
+            
+            for i in range(0, len(stats_t), step_int_conf):
+                ind_nan = np.isnan(stats_t[i])
+                
+                if all(ind_nan):
+                    conf_int.append([float("nan"), float("nan")])
+                else:
+                    conf_int.append(bootsamplingCI(stats_t[i][~ind_nan], 1000, confidence))
+ 
+            ax.plot(times[0], mean_vel, linewidth=2, color = color, label=line_name+" "+stimulation_type)
+            
+            x_conf_int = times[0][0::step_int_conf]
+            
+            low_conf_int = np.transpose(conf_int)[0]
+            up_conf_int = np.transpose(conf_int)[1]
+            
+            ax.fill_between(x_conf_int, low_conf_int, up_conf_int, alpha=0.25, color = "gray", label="Confidence interval of the mean at {}%".format(confidence*100))
+           
+            for stim in av_stim_frame:
+                
+                av_stim_frame[stim] = np.round(np.mean(av_stim_frame[stim], axis=0))
+                start_stim = int(av_stim_frame[stim][0])
+                stop_stim = int(av_stim_frame[stim][1])
+                ax.axvspan(times[0][start_stim], times[0][stop_stim], alpha=0.1, color='red')
+
+            if flag:
+                ax.set_title("{} of flies from strain {} stimulation {} as a function of time \n".format(stat_name, line_name, stimulation_type), fontsize=22)
+            ax.set_xlabel("Time [s]") 
+            ax.set_ylabel("{} [{}]".format(stat_name, unit)) 
+            plt.legend()
+            plt.grid()
+            
+            
+            plot_name = r'{}_Confidence_interval_{}_plot_{}_clean.png'.format(line_name, stat_name, stimulation_type)    
+            if flag:
+                folder_name = os.path.join("results", 'Velocities_CI')
+                if not os.path.exists(folder_name):
+                    os.makedirs(folder_name)
+                fig.savefig(os.path.join(folder_name, plot_name), dpi=300, bbox_inches='tight')
+                plt.close()
+                flag = False
+            
+        if not ZOOM and not ConfInt:
+            
+            if create_fig and create_ax:
+                fig, ax=plt.subplots(figsize=(14,7))
+                flag = True
+            
+            plt.plot(times[0], mean_vel, linewidth=2, color = color, label=line_name+" "+stimulation_type)
+            plt.plot(np.transpose(times), np.transpose(stats), alpha = 0.05, color = 'gray')
+            if flag:
+                ax.set_title("{} of flies from strain {} stimulation {} as a function of time  \n".format(stat_name, line_name, stimulation_type), fontsize=22)
+            ax.set_xlabel("Time [s]") 
+            ax.set_ylabel("{} [{}]".format(stat_name, unit)) 
+            ax.set_ylim([-20,20])
+                
+            plt.grid()
+            #print(av_stim_frame)
+            for stim in av_stim_frame:
+                av_stim_frame[stim] = np.round(np.mean(av_stim_frame[stim], axis=0))
+                ax.axvspan(times[0][int(av_stim_frame[stim][0])], times[0][int(av_stim_frame[stim][1])], alpha=0.1, color='red')
+                         
+            plot_name = r'{}_Classical_traces_{}_plot_{}_{}.pdf'.format(line_name, stat_name, stimulation_type, age)    
+            #plt.legend()
+            
+            if flag:
+                folder_name = os.path.join("results", 'Velocities_raw')
+                if not os.path.exists(folder_name):
+                    os.makedirs(folder_name)
+                fig.savefig(os.path.join(folder_name, plot_name), dpi=300, bbox_inches='tight')
+                
+                plt.close()
+
+        return plot_name
+
 def get_key_info(line, concat=False):
     velocities = []
     exp_names = []
@@ -102,7 +349,7 @@ def get_key_info(line, concat=False):
     return first_rec, second_rec, third_rec
 
 
-def get_velocities(first, second, third, line, age, off_period_keep=3, collision_tolerance=0.3, center="Center", window=21, stimulation_type="p6-0", savgol=True, concat=False, save_data=False, get_experiments_order=True):
+def get_velocities(first, second, third, line, age, off_period_keep=30, collision_tolerance=0.3, center="Center", window=21, stimulation_type="p6-0", savgol=True, concat=False, save_data=False, get_experiments_order=True):
 
     """
     This function compute the translational velocities of all flies with the ame stimulation protocol using the point provided in center.
@@ -364,8 +611,9 @@ def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp
     AOC_all = []
     vmin_all = []
     bout_all = []
-
-    for line in lines:
+    line_names=['CWA/all','EF/all','IF/all']
+    
+    for i, line in enumerate(lines):
         print(line)
         slope_line = []
         AOC_line = []
@@ -379,7 +627,9 @@ def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp
         first, second, third = get_key_info(line, concat=concat)
 
         velocities, times, experiments_stim_frames, fpss, exp_names = get_velocities(first, second, third, line, age, stimulation_type=stimulation_type, concat=concat)
-
+        
+        plot_velocity(line_names[i], velocities, times, fpss, experiments_stim_frames, age)        
+        
         stim_on = []
         times = np.array(times)
 
