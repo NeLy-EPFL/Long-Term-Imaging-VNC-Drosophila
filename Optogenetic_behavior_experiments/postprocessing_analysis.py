@@ -102,7 +102,7 @@ def get_key_info(line, concat=False):
     return first_rec, second_rec, third_rec
 
 
-def get_velocities(first, second, third, line, off_period_keep=3, collision_tolerance=0.3, center="Center", window=21, stimulation_type="p6-0", savgol=True, concat=False, save_data=False, get_experiments_order=True):
+def get_velocities(first, second, third, line, age, off_period_keep=3, collision_tolerance=0.3, center="Center", window=21, stimulation_type="p6-0", savgol=True, concat=False, save_data=False, get_experiments_order=True):
 
     """
     This function compute the translational velocities of all flies with the ame stimulation protocol using the point provided in center.
@@ -193,12 +193,20 @@ def get_velocities(first, second, third, line, off_period_keep=3, collision_tole
     max_len=0
     count_exp = 0
     prev_exp = ""
+
+    if age is not "all":
+        if age == "first":
+            age_to_process = first
+        if age == "second":
+            age_to_process = second
+        if age == "third":
+            age_to_process = third
+    
     for exp_i, [exp_key, experiment] in enumerate(experiments) :
-        
-        #if exp_key not in third:
-        #    print("STOP")
-        #    print("exp_key in first ", exp_key in first)
-        #    continue
+        if age is not "all":
+            if exp_key not in age_to_process:
+                print("Skipping: experiment from a different age")
+                continue
 
         try:
             if stimulation_type in exp_key:                
@@ -307,7 +315,7 @@ def get_velocities(first, second, third, line, off_period_keep=3, collision_tole
     return velocities, times, experiments_stim_frames, fpss, exp_names
     
 
-def plot_metrics(lines, stimulation_type = "p6-0", agg = "Line", bp=True, concat=True):
+def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp=True, concat=True):
 
     """
     Save the velocity based metrics of all flies and display their 
@@ -370,7 +378,7 @@ def plot_metrics(lines, stimulation_type = "p6-0", agg = "Line", bp=True, concat
         line_name = line_split[-2] + '-' + line_split[-1]
         first, second, third = get_key_info(line, concat=concat)
 
-        velocities, times, experiments_stim_frames, fpss, exp_names = get_velocities(first, second, third, line, stimulation_type=stimulation_type, concat=concat)
+        velocities, times, experiments_stim_frames, fpss, exp_names = get_velocities(first, second, third, line, age, stimulation_type=stimulation_type, concat=concat)
 
         stim_on = []
         times = np.array(times)
@@ -428,7 +436,7 @@ def plot_metrics(lines, stimulation_type = "p6-0", agg = "Line", bp=True, concat
             for ax, col_name in zip(axs, metric_cols):
                 #print("ax",ax,"col_name",col_name)
                 nice_violinplot("Fly_line", col_name, metrics, ax)
-            fig_name = line_name+"_lines_metrics_line_"+stimulation_type
+            fig_name = f"{line_name}_lines_metrics_{stimulation_type}_{age}"
     if bp:
         fig.suptitle("Distribution of velocity metrics")
         fig.tight_layout(pad=3)
@@ -442,8 +450,8 @@ def plot_metrics(lines, stimulation_type = "p6-0", agg = "Line", bp=True, concat
     return [slope_all, AOC_all, vmin_all]
 
 def run_statistic_analysis(label, metric):
-    
-    print(f"len {label}", len(metric))
+
+    metric = [[x for x in y if not np.isnan(x)] for y in metric]
     
     print(f"{label} kruskal ", stats.kruskal(metric[0],metric[1],metric[2],nan_policy="omit"))
     
