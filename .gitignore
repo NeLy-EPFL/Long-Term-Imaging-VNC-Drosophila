@@ -1,3 +1,7 @@
+# outputs of caffeine figure making
+Caffeine_feeding_neural_activity_experiment/outputs/
+.vscode
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
