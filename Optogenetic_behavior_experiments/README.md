@@ -1,30 +1,21 @@
-# Code to pre-process functional two-photon and behaviour data of the feeding recordings.
+# Code for reproducing the behavior experiments analysis.
 
-This package relies installing the twoppp package according to the instructions:
-https://github.com/NeLy-EPFL/twoppp
-Also see the environment.yml file for package versions used to produce the results.
+These scripts compute the velocity from tracked flies and calculate the metrics for analyzing the velocity profiles.
+The tracking data from all the behavioral experiments are in the ```data``` folder. IF folders correspond to intact flies, CWAF folders correspond to sham dissected flies, and EF folders correspond to implanted flies. 
 
-## Reproducing the results:
-Download the data from the harvard dataverse.
+## Requirements:
 
-Make sure to keep the same folder structure:
-- fly
-    - trial 1
-        - processed
-        - behData
-        - ...
-    - ...
-    - trial X
-    - processed
-        - denoising_run_correct
-        - ...
-Once you have downloaded the data, you can run the following Pyhon scripts to reproduce the results:
+- Create a conda environment using the ```environment.yml``` file:
+```bash
+$ conda env create -f environment.yml
+```
 
-## Contents
-1. ```make_caff_figures.py```: run this file to reproduce Figure 4 from the paper (caffeine feeding). If you have not re-run the pre-processing, this script will use raw in stead of denoised data. As a result, the plots will appear noisier.
-2. ```make_caff_videos.py```: run this file to reproduce the supplementary videos showing the caffeine wave or behaviour before/during/after feeding. If you have not re-run the pre-processing, this script will use raw in stead of denoised data. As a result, the videos will much! noisier. Only the wave video can be re-generated without re-running the pre-processing.
-3. ```preprocess_all_flies.py```: run this file to reproduce the data pre-processing from raw data. You have two options:
-    1. run neural data processing from scrath using only the green.tif and red.tif
-    2. don't re-do the motion correction and use the provided DeepInterpolation model. This saves a lot of time and uses the green_com_warped.tif, which is the output of the optical flow motion correction.
+OR
 
+- Install the packages specified in the ```environment.yml``` file in your own environment.
 
+## Reproducing the behavioral analysis
+- Run the script ```get_behavior_plots.py```: This script will generate the plots shown in Figure 2 c-d
+    - If the variable ```age``` is changed from ```all``` to ```first```, ```second```, or ```third```, the same plots will be generated for the specific ages from the experiments, 1-3 dpi, 14-16 dpi, or 28-30 dpi, respectively, as shown in Figure S7.
+
+- The plots will be saved in a results folder in a pdf format.
