@@ -1,9 +1,6 @@
-import sys
 import os.path
-PACKAGE_PATH = "/home/jbraun/projects/longterm"
-sys.path.append(PACKAGE_PATH)
 
-from longterm.pipeline import PreProcessParams
+from twoppp.pipeline import PreProcessParams
     
 params = PreProcessParams()
 params.genotype = "J1xM5"

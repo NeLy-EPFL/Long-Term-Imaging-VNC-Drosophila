@@ -5,14 +5,11 @@ Alternatively, neural data processing can be started from the green_com_warped.t
 This means center of mass registration and non-affine motion correction using ofco
 have already been performed. This saves a lot of time because motion correction is very slow.
 """
-import os, sys
+import os
 from copy import deepcopy
 
-PACKAGE_PATH = "/home/jbraun/projects/longterm"
-sys.path.append(PACKAGE_PATH)
-
-from longterm import load, utils
-from longterm.pipeline import PreProcessFly
+from twoppp import load, utils
+from twoppp.pipeline import PreProcessFly
 
 from flies import fly_dirs, conditions
 from preprocessing_parameters import params
