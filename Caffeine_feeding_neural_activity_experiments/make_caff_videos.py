@@ -6,7 +6,6 @@ If you did not run the denoising again, this script will run it with raw data,
 which is why it might appear rougher than in the paper.
 """
 import os
-import sys
 from datetime import datetime
 from tqdm import tqdm
 from glob import glob
@@ -15,11 +14,8 @@ import pickle
 import numpy as np
 from scipy.ndimage import gaussian_filter1d, gaussian_filter
 
-PACKAGE_PATH = "/home/jbraun/projects/longterm"
-sys.path.append(PACKAGE_PATH)
-
-from longterm import utils, load, rois
-from longterm.plot.videos import make_multiple_video_raw_dff_beh
+from twoppp import utils, load, rois
+from twoppp.plot.videos import make_multiple_video_raw_dff_beh
 
 from flies import high_caff_flies, high_caff_main_fly, low_caff_main_fly, sucr_main_fly
 

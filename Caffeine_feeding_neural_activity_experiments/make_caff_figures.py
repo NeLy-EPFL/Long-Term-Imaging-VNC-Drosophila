@@ -5,7 +5,6 @@ If you did not run the denoising again, this script will run them with raw data,
 which is why they might appear rougher than in the paper.
 """
 import os
-import sys
 from datetime import datetime
 from tqdm import tqdm
 from copy import deepcopy
@@ -21,12 +20,9 @@ from scipy.ndimage import gaussian_filter1d, gaussian_filter
 from skimage.color import label2rgb
 from PIL import ImageColor
 
-PACKAGE_PATH = "/home/jbraun/projects/longterm"
-sys.path.append(PACKAGE_PATH)
-
-from longterm import utils, load, rois, denoise
-from longterm import plot as myplt
-from longterm.pipeline import PreProcessFly
+from twoppp import utils, load, rois, denoise
+from twoppp import plot as myplt
+from twoppp.pipeline import PreProcessFly
 
 from flies import high_caff_flies, high_caff_main_fly, low_caff_main_fly, sucr_main_fly
 from preprocessing_parameters import params
