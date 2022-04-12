@@ -4,15 +4,20 @@ These scripts compute the velocity from tracked flies and calculate the metrics 
 The tracking data from all the behavioral experiments are in the ```data``` folder. IF folders correspond to intact flies, CWAF folders correspond to sham dissected flies, and EF folders correspond to implanted flies. 
 
 ## Requirements:
+- Anaconda for Python 3.7
+
+## Installation:
 
 - Create a conda environment using the ```environment.yml``` file:
 ```bash
 $ conda env create -f environment.yml
 ```
+**(Installation time: 20 seconds)**
 
-OR
-
-- Install the packages specified in the ```environment.yml``` file in your own environment.
+- Activate the environment
+```bash
+$ conda activate long_term
+```
 
 ## Reproducing the behavioral analysis
 - Run the script ```get_behavior_plots.py```: This script will generate the plots shown in Figure 2 c-d
