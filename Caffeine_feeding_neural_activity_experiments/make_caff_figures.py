@@ -323,7 +323,8 @@ def make_detailled_wave_plots(fly, axs, i_trial, overwrite=False, crop=True, tit
     cbar.set_label("peak time (s)")
     cbar.outline.set_visible(False)
 
-def make_trial_wave_plot(fly, ax, ylim=None, overwrite=False, legend=False, shift=1, normalise=0.99, i_missing_data=[]):
+def make_trial_wave_plot(fly, ax, ylim=None, overwrite=False, legend=False, shift=1, normalise=0.99,
+                         i_missing_data=[], use_denoised=True, n_norm=2):
     mask = utils.get_stack(fly.mask_fine) > 0
     N_pixels = np.sum(mask)
     green_means = []
@@ -334,7 +335,7 @@ def make_trial_wave_plot(fly, ax, ylim=None, overwrite=False, legend=False, shif
     else:
         print("loading fluorescence data for fly ", fly.dir)
         for trial in tqdm(fly.trials):
-            if os.path.isfile(trial.green_denoised):
+            if use_denoised and os.path.isfile(trial.green_denoised):
                 green = utils.get_stack(trial.green_denoised)
             else:
                 print("Could not find the denoised green fluorescence data. Will instead use the raw one:")
@@ -352,12 +353,12 @@ def make_trial_wave_plot(fly, ax, ylim=None, overwrite=False, legend=False, shif
             pickle.dump(dffs, f)
 
     if normalise:
-        low = np.quantile(dffs[:,:2], (1-normalise)/2)
-        high = np.quantile(dffs[:,:2], (1+normalise)/2)
+        low = np.quantile(dffs[:,:n_norm], (1-normalise)/2)
+        high = np.quantile(dffs[:,:n_norm], (1+normalise)/2)
         dffs = (dffs - low) / (high - low)
 
-    trial_colors = [colors[0], colors[0], colors[3]] + [colors[6]]*7 + [colors[8]]*2
-    trial_alphas = [0.5, 0.8, 0.8] + list(np.linspace(0.5, 0.8, 7)) + [0.7, 1]
+    trial_colors = [colors[0], colors[0], colors[3]] + [colors[6]]*6 + [colors[8]]*2
+    trial_alphas = [0.5, 0.8, 0.8] + list(np.linspace(0.5, 0.8, 6)) + [0.7, 1]
     if len(i_missing_data) == 0:
         MISSING_DATA = False
     else:
@@ -388,7 +389,7 @@ def make_trial_wave_plot(fly, ax, ylim=None, overwrite=False, legend=False, shif
     dist = np.maximum(shift, 1.5)
     
     if legend:
-        texts = ["before feeding", "during feeding", "<25 min after feeding", ">25 min after feeding"]
+        texts = ["before feeding", "during feeding", "<29 min after feeding", ">29 min after feeding"]
         text_colors = [colors[0], colors[3], colors[6], colors[8]]
         for i_t, (t, c) in enumerate(zip(texts, text_colors)):
             ax.text(x=0, y=ylim[-1]-4*dist+i_t*dist, s=t, color=c)
