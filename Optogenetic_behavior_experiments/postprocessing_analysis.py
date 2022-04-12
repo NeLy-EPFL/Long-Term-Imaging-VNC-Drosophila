@@ -37,7 +37,7 @@ def compute_av_stim_frame(experiments_stim_frames):
     for i, expe_stim_frame in enumerate(experiments_stim_frames):
         for stim in expe_stim_frame:
             if "on" in stim:
-                if i == 0:
+                if stim not in list(av_stim_frame.keys()):
                     av_stim_frame[stim] = [expe_stim_frame[stim]]
                 else:
                     av_stim_frame[stim].append(expe_stim_frame[stim])
@@ -419,6 +419,7 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
     fpss = []
     experiments=[]
     ratio = 32/832
+    keys_to_skip_dvf = ["200710_124532_s0a0_p6-0","200730_093001_s0a0_p6-0","200717_090558_s0a0_p6-0","200717_090558_s0a0_p6-0","200806_084424_s0a0_p6-0","200724_094302_s0a0_p6-0","200730_093706_s0a0_p6-0","200717_092001_s0a0_p6-0","200717_092001_s0a0_p6-0","200807_090419_s0a0_p6-0","200807_090419_s0a0_p6-0","200714_092630_s0a0_p6-0","200710_121555_s0a0_p6-0","200730_105105_s0a0_p6-0","200717_111201_s0a0_p6-0","200730_105801_s0a0_p6-0","200813_084503_s0a0_p6-0","200626_111806_s0a0_p6-0"]
     
     #print('line ', line)
     if not concat:
@@ -469,9 +470,16 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
                     flyn_theta = []
                     stim_frame = {}
 
-                    print("CHECK")
+                    #print("CHECK")
 
                     for stim in stimulations:
+                        num_flips = sum(experiment[fly][stim]['DorsoVentralFlip'])
+                        ratio_flips = num_flips/len(experiment[fly][stim]['DorsoVentralFlip'])
+                        if exp_key not in keys_to_skip_dvf:
+                            if ratio_flips > 0.5:
+                                print(f"Skipping due to dorso-ventral flip = Exp: {fly_gen[exp_i]}-{exp_key}; Fly: {fly_i}; Period: {stim}")
+                                continue
+                        
                         flyn_x.extend(experiment[fly][stim]['trajectories'][center]["x"])
                         flyn_y.extend(experiment[fly][stim]['trajectories'][center]["y"])
                         flyn_theta.extend(experiment[fly][stim]['trajectories'][center]["orientation"])
