@@ -29,4 +29,6 @@ if __name__ == "__main__":
         print("Starting preprocessing of fly \n" + fly_dir)
         preprocess = PreProcessFly(fly_dir=fly_dir, params=params_copy)
         preprocess.run_all_trials()
-        preprocess.get_dfs()
+        # dataframe processing not required for analysis in paper,
+        # but can be used for additional analysis
+        # preprocess.get_dfs()

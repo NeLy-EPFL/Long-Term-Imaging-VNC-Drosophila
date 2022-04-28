@@ -1,9 +1,10 @@
 import os.path
 from longterm import load
 from longterm import utils
-
 BASE_DIR = os.path.join(load.NAS2_DIR_LH, "_dataverse", 
-                        "test_copy_JB")  # Caffeine_feeding_neural_activity_experiments
+                        "test_copy_revisions")
+# BASE_DIR = os.path.join(load.NAS2_DIR_LH, "_dataverse", 
+#                        "test_copy_JB")  # Caffeine_feeding_neural_activity_experiments
 
 conditions = [
     "High_Caffeine_Fly1",

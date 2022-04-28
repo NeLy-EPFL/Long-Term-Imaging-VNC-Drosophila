@@ -34,4 +34,6 @@ if __name__ == "__main__":
         print("Starting preprocessing of fly \n" + fly_dir)
         preprocess = PreProcessFly(fly_dir=fly_dir, params=params_copy)
         preprocess.run_all_trials()
-        preprocess.get_dfs()
+        if condition == "High_Caffeine_Fly1":
+            # data frames only required for supplementary figure with walk/rest data of one fly
+            preprocess.get_dfs()
