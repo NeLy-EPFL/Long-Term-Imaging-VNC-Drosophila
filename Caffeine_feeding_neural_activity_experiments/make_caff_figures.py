@@ -416,7 +416,7 @@ def main_figure():
     # row 1: trial wave plots
     ylim = make_trial_wave_plot(high_caff_main_fly, ax_dict["C"], legend=False)
     _ = make_trial_wave_plot(low_caff_main_fly, ylim=ylim, ax=ax_dict["B"], legend=False,
-                             i_missing_data=[8])  # axs[0,1],
+                             i_missing_data=[])
     _ = make_trial_wave_plot(sucr_main_fly, ylim=ylim, ax=ax_dict["A"], legend=True)
 
     # row 2: wave detailled plot
