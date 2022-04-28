@@ -1,8 +1,8 @@
 # Limb amputation experiment
 The python code contained in this folder has to be run with the associated data that can be downloaded at: https://dataverse.harvard.edu/dataverse/long_term_imaging_vnc_drosophila
-Unzip the data into one folder and modify the rootdir variable with your path:
 
-![alt text](https://github.com/NeLy-EPFL/Long-Term-Imaging-VNC-Drosophila/tree/main/limb_amputation_experiment/folder_organization.png?raw=true)
+Unzip the data into one folder as shown ![here](https://github.com/NeLy-EPFL/Long-Term-Imaging-VNC-Drosophila/tree/main/limb_amputation_experiment/folder_organization.png?raw=true) and modify the rootdir variable (line 263) with the parent folder containing all the control and leg removed folders:
+
 
 This code was run with:
 
