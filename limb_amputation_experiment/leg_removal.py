@@ -5,6 +5,7 @@ import heapq
 import os
 from matplotlib import pyplot as plt
 import matplotlib.ticker as ticker
+import scipy.stats
 
 
 def extract_contours(image_curr,top_contour,bottom_contour,blur_val):
@@ -105,7 +106,8 @@ def save_images(stack_to_save,top_contour,bottom_contour,path_folder):
 
 	"""
 	save_dir = (path_folder+ "/roi_stack/")
-	os.mkdir(save_dir)
+	if not os.path.exists(save_dir):
+		os.mkdir(save_dir)
 	for m in range(len(stack_to_save)):
 		cv2.drawContours(image=stack_to_save[m], contours=top_contour, contourIdx=-1, color=(21,237,237), thickness=2, lineType=cv2.LINE_AA)
 		cv2.drawContours(image=stack_to_save[m], contours=bottom_contour, contourIdx=-1, color=(237, 74, 233), thickness=2, lineType=cv2.LINE_AA)
@@ -166,7 +168,7 @@ def get_box_plot_info(days_list,control_top_all,control_bot_all,leg_removed_top_
 
 	return box_cont_top, box_cont_bot, box_lr_top, box_lr_bot
 
-def save_figure(path_fig,days, boxplot_cont_top, boxplot_cont_bot, boxplot_lr_top, boxplot_lr_bot,control_top_all,control_bot_all,leg_removed_top_all,leg_removed_bot_all):
+def save_figure(path_fig,days, boxplot_cont_top, boxplot_cont_bot, boxplot_lr_top, boxplot_lr_bot,control_top_all,control_bot_all,leg_removed_top_all,leg_removed_bot_all,pvalues_top,pvalues_bottom):
 	"""
 	This function creates the 2 final plots presented in Figure 3. One plot is associated with the first ROI while the second one is associated with the second ROI. 
 	Each figure shows the ROIs mean fluorescence values per day per fly. Flies are separated into two colours (control group in orange and limb amputation in blue). 
@@ -182,63 +184,88 @@ def save_figure(path_fig,days, boxplot_cont_top, boxplot_cont_bot, boxplot_lr_to
 	figure = plt.figure(1)
 	ax = plt.subplot(1, 1, 1)
 	figure.set_size_inches(14,8)
-	plt.boxplot(boxplot_cont_top,positions=shift_selectedX2,widths=0.22,medianprops=dict(color="black"))
-	plt.boxplot(boxplot_lr_top,positions=shift_selectedX4,widths=0.22,medianprops=dict(color="black"))
-	plt.plot(shift_selectedX1, control_top_all[0], 'v', color='darkorange',label='C1',markersize=4)
-	plt.plot(shift_selectedX1, control_top_all[1], 'v', color='tomato',label='C2',markersize=4)
-	plt.plot(shift_selectedX1, control_top_all[2], 'v', color='moccasin',label='C3',markersize=4)
-	plt.plot(shift_selectedX3, leg_removed_top_all[0], 'o', color='lightsteelblue',label='LR1',markersize=4)
-	plt.plot(shift_selectedX3, leg_removed_top_all[1], 'o', color='mediumslateblue',label='LR2',markersize=4)
-	plt.plot(shift_selectedX3, leg_removed_top_all[2], 'o', color='darkblue',label='LR3',markersize=4)
+	plt.boxplot(boxplot_cont_top,positions=shift_selectedX2,widths=0.22,medianprops=dict(color="black"),showfliers=False)
+	plt.boxplot(boxplot_lr_top,positions=shift_selectedX4,widths=0.22,medianprops=dict(color="black"),showfliers=False)
+	plt.plot(shift_selectedX1, control_top_all[0], 'v', color='lightsteelblue',label='C1',markersize=4)
+	plt.plot(shift_selectedX1, control_top_all[1], 'v', color='mediumslateblue',label='C2',markersize=4)
+	plt.plot(shift_selectedX1, control_top_all[2], 'v', color='darkblue',label='C3',markersize=4)
+	plt.plot(shift_selectedX1, control_top_all[3], 'v', color='royalblue',label='C4',markersize=4)
+	plt.plot(shift_selectedX1, control_top_all[4], 'v', color='dodgerblue',label='C5',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_top_all[0], 'o', color='darkorange',label='LR1',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_top_all[1], 'o', color='sandybrown',label='LR2',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_top_all[2], 'o', color='moccasin',label='LR3',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_top_all[3], 'o', color='tomato',label='LR4',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_top_all[4], 'o', color='orangered',label='LR5',markersize=4)
+	for idx, pv in enumerate(pvalues_top):
+		plt.text(x=idx*4, y=134, s=pv)
 	plt.xticks(days) 
 	plt.ylim(0,140)
 	ax.xaxis.set_major_locator(ticker.MaxNLocator(18))
 	ax.set_xticklabels(labels)
 	plt.ylabel("$\%$ of fluorescence")
 	plt.xlabel("Days")
-	plt.legend()
+	plt.legend(loc='lower left')
 	plt.savefig(path_fig+'/_contours_top.eps', format='eps')
 
 	figure = plt.figure(2)
 	ax = plt.subplot(1, 1, 1)
 	figure.set_size_inches(14,8)
-	plt.plot(shift_selectedX1, control_bot_all[0], 'v', color='darkorange',label='C1',markersize=4)
-	plt.plot(shift_selectedX1, control_bot_all[1], 'v', color='tomato',label='C2',markersize=4)
-	plt.plot(shift_selectedX1, control_bot_all[2], 'v', color='moccasin',label='C3',markersize=4)
-	plt.plot(shift_selectedX3, leg_removed_bot_all[0], 'o', color='lightsteelblue',label='LR1',markersize=4)
-	plt.plot(shift_selectedX3, leg_removed_bot_all[1], 'o', color='mediumslateblue',label='LR2',markersize=4)
-	plt.plot(shift_selectedX3, leg_removed_bot_all[2], 'o', color='darkblue',label='LR3',markersize=4)
-	plt.boxplot(boxplot_cont_bot,positions=shift_selectedX2,widths=0.22,medianprops=dict(color="black"))
-	plt.boxplot(boxplot_lr_bot,positions=shift_selectedX4,widths=0.22,medianprops=dict(color="black"))
+	plt.plot(shift_selectedX1, control_bot_all[0], 'v', color='lightsteelblue',label='C1',markersize=4)
+	plt.plot(shift_selectedX1, control_bot_all[1], 'v', color='mediumslateblue',label='C2',markersize=4)
+	plt.plot(shift_selectedX1, control_bot_all[2], 'v', color='darkblue',label='C3',markersize=4)
+	plt.plot(shift_selectedX1, control_bot_all[3], 'v', color='royalblue',label='C4',markersize=4)
+	plt.plot(shift_selectedX1, control_bot_all[4], 'v', color='dodgerblue',label='C5',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_bot_all[0], 'o', color='darkorange',label='LR1',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_bot_all[1], 'o', color='sandybrown',label='LR2',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_bot_all[2], 'o', color='moccasin',label='LR3',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_bot_all[3], 'o', color='tomato',label='LR4',markersize=4)
+	plt.plot(shift_selectedX3, leg_removed_bot_all[4], 'o', color='orangered',label='LR5',markersize=4)
+	plt.boxplot(boxplot_cont_bot,positions=shift_selectedX2,widths=0.22,medianprops=dict(color="black"),showfliers=False)
+	plt.boxplot(boxplot_lr_bot,positions=shift_selectedX4,widths=0.22,medianprops=dict(color="black"),showfliers=False)
+	for idx, pv in enumerate(pvalues_bottom):
+		plt.text(x=idx*4, y=134, s=pv)
 	plt.ylim(0,140)
 	ax.xaxis.set_major_locator(ticker.MaxNLocator(18))
 	ax.set_xticklabels(labels)
 	plt.ylabel("$\%$ of fluorescence")
 	plt.xlabel("Days")
-	plt.legend()
+	plt.legend(loc='lower left')
 	plt.savefig(path_fig+'/_contours_bottom.eps', format='eps')
 
 	return 
 
+def get_p_value(control_values_per_day,legremoved_values_per_day):
+	pval_day_summary = [" "]
+	for i in range(1,len(control_values_per_day)):
+		statval, pval = scipy.stats.mannwhitneyu(control_values_per_day[i],legremoved_values_per_day[i])
+		if pval < 0.01:
+			pval_day_summary.append("**")
+		elif pval < 0.05:
+			pval_day_summary.append("*")
+		else:
+			pval_day_summary.append(" ")
+	return pval_day_summary
+
 #### MAIN ####
 #initiating the contours index values per fly and the blurring values used to extract the contours in our 2-photon images.
-LR_blur = [3,3,4]
-LR_top = [1,0,0]
-LR_bottom = [3,3,3]
-control_blur = [2,3,3]
-control_top = [2,1,1]
-control_bottom = [3,2,3]
-control_top_all = [[],[],[]]
-control_bot_all = [[],[],[]]
-leg_removed_top_all = [[],[],[]]
-leg_removed_bot_all = [[],[],[]]
+LR_blur = [3,3,4,2,2]
+LR_top = [1,0,0,2,1]
+LR_bottom = [3,3,3,4,4]
+control_blur = [3,3,3,2,2]
+control_top = [0,1,1,0,1]
+control_bottom = [3,2,3,3,3]
+control_top_all = [[],[],[],[],[]]
+control_bot_all = [[],[],[],[],[]]
+leg_removed_top_all = [[],[],[],[],[]]
+leg_removed_bot_all = [[],[],[],[],[]]
 
 #Change this path to the folder's path containing all the control and limb amputation data. Do not change the flies numbering after downloading the data.
-rootdir = #"PATH TO FLIES FOLDERS"
+rootdir = "" #"PATH TO FLIES FOLDERS"
 
 #Looping over the flies' directories 
 for dirs in next(os.walk(rootdir))[1]:
 	curr_folder = os.path.join(rootdir, dirs)
+	print("curr_folder",curr_folder)
 	#if conditions to select the appropriate contours indexes and blurring values.
 	if "Control" in dirs:
 		bool_control = True
@@ -280,6 +307,8 @@ for dirs in next(os.walk(rootdir))[1]:
 		top_mask_template, bottom_mask_template = extract_mask(image,top_contours,bottom_contours)
 		curr_mean_top, curr_mean_bot = get_mean_values(stack_curr,top_mask_template,bottom_mask_template)
 		save_images(stack_curr,top_contours,bottom_contours,curr_folder)
+#"""
+#"""
 	#inserting nan values for some missing recordings.
 	if bool_control == True:
 		if fly_val == 1:
@@ -288,6 +317,9 @@ for dirs in next(os.walk(rootdir))[1]:
 		if fly_val == 3:
 			curr_mean_top.insert(8,np.nan)
 			curr_mean_bot.insert(8,np.nan)
+		if fly_val == 4:
+			curr_mean_top.insert(7,np.nan)
+			curr_mean_bot.insert(7,np.nan)
 		#each extracted fluorescence value is divided to the first day's fluorescence value and multiplied by 100.
 		curr_mean_top = [(item/curr_mean_top[0])*100 for item in curr_mean_top]
 		curr_mean_bot = [(item/curr_mean_bot[0])*100 for item in curr_mean_bot]
@@ -297,15 +329,26 @@ for dirs in next(os.walk(rootdir))[1]:
 	if bool_control == False:
 		if fly_val == 2:
 			curr_mean_top.insert(5,np.nan)
-			curr_mean_bot.insert(5,np.nan)	
+			curr_mean_bot.insert(5,np.nan)
+		if fly_val == 5:
+			curr_mean_top.insert(1,np.nan)
+			curr_mean_bot.insert(1,np.nan)
+			curr_mean_top.insert(2,np.nan)
+			curr_mean_bot.insert(2,np.nan)
+			curr_mean_top.insert(11,np.nan)
+			curr_mean_bot.insert(11,np.nan)	
 		#each extracted fluorescence value is divided to the first day's fluorescence value and multiplied by 100.
 		curr_mean_top = [(item/curr_mean_top[0])*100 for item in curr_mean_top]
 		curr_mean_bot = [(item/curr_mean_bot[0])*100 for item in curr_mean_bot]
 		leg_removed_top_all[fly_val-1] = curr_mean_top
 		leg_removed_bot_all[fly_val-1] = curr_mean_bot
+
 #extracting the ROIs mean fluorescence values per day and plotting the final figures showing the ROIs mean fluorescence values per control group and their associated boxplots.
+
 days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 boxplot_cont_top, boxplot_cont_bot, boxplot_lr_top, boxplot_lr_bot = get_box_plot_info(days,control_top_all,control_bot_all,leg_removed_top_all,leg_removed_bot_all)
-save_figure(rootdir, days, boxplot_cont_top, boxplot_cont_bot, boxplot_lr_top, boxplot_lr_bot,control_top_all,control_bot_all,leg_removed_top_all,leg_removed_bot_all)
+pvalues_top = get_p_value(boxplot_cont_top,boxplot_lr_top)
+pvalues_bottom = get_p_value(boxplot_cont_bot,boxplot_lr_bot)
+save_figure(rootdir, days, boxplot_cont_top, boxplot_cont_bot, boxplot_lr_top, boxplot_lr_bot,control_top_all,control_bot_all,leg_removed_top_all,leg_removed_bot_all,pvalues_top,pvalues_bottom)
 
 
