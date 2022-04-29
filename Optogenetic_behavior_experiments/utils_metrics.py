@@ -85,7 +85,7 @@ def get_frames_to_ignore(fly_dat, stimulations, off_period_keep, collision_toler
     
     return (frame_to_ign,)
 
-def nice_violinplot(x, y, data, ax, hue=None):
+def nice_violinplot(x, y, data, ax, hue=None, colors=None):
     
     """
     Plot nice violin plots for the distribution y
@@ -93,10 +93,19 @@ def nice_violinplot(x, y, data, ax, hue=None):
     """
     
     alpha = 0.2
-    axis = sns.violinplot(x=x, y=y, hue=hue, data=data, ax=ax, inner="quartile")
+    if colors==None:
+        axis = sns.violinplot(x=x, y=y, hue=hue, data=data, ax=ax, inner="quartile")
+    else:
+        axis = sns.violinplot(x=x, y=y, hue=hue, data=data, ax=ax, inner="quartile", palette=colors)
+
     for violin in axis.collections:
         violin.set_alpha(alpha)
-    ax2 = sns.stripplot(x=x, y=y, hue=hue, data=data, jitter=True, dodge=True, ax=ax)
+
+    if colors==None:
+        ax2 = sns.stripplot(x=x, y=y, hue=hue, data=data, jitter=True, dodge=True, ax=ax)
+    else:
+        ax2 = sns.stripplot(x=x, y=y, hue=hue, data=data, jitter=True, dodge=True, ax=ax, palette=colors)
+        
     handles, labels = ax.get_legend_handles_labels()
     half_len_handle = len(handles)//2
     l = ax.legend(handles[0:half_len_handle], labels[0:half_len_handle], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., title =hue)
@@ -116,7 +125,7 @@ def get_slope (line, time):
     except:
         return float('nan')
     if ind == 0:
-        return 0
+        return float('nan')
     else:
         return (line[ind]-line[0])/(time[ind]-time[0])
         

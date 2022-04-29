@@ -128,7 +128,7 @@ def plot_velocity(line, stats, times, fpss, experiments_stim_frames, age, stimul
             line_split = line.split('/')
             line_name = line_split[-2] + '-' + line_split[-1]
         except Exception as e:
-            print(e)
+            print("\nException finding stim periods: " + str(e))
             return
                 
         if ZOOM:
@@ -272,7 +272,7 @@ def plot_velocity(line, stats, times, fpss, experiments_stim_frames, age, stimul
 
         return plot_name
 
-def get_key_info(line, concat=False):
+def get_key_info(line, concat=True):
     velocities = []
     exp_names = []
     fly_gen = []
@@ -281,6 +281,7 @@ def get_key_info(line, concat=False):
     fly_nbr = 0
     fpss = []
     experiments=[]
+        
     if not concat:
         list_line = [line]
     else:
@@ -308,9 +309,6 @@ def get_key_info(line, concat=False):
     count_exp = 0
     prev_exp = ""
     for exp_i, [exp_key, experiment] in enumerate(experiments) :
-        #print("exp_i ",exp_i)
-        #print("exp key ", exp_key)
-        #print("fly_gen[exp_i] ",fly_gen[exp_i])
 
         if fly_gen[exp_i] in save_gen:
             #print('in saved gen already')
@@ -328,7 +326,7 @@ def get_key_info(line, concat=False):
                     temp_ind.append(m)
                     pass
         except Exception as e:
-            print('\nException:' + str(e))
+            print('\nException key experiment not found: ' + str(e))
             pass
 
         temp_date_arr = np.array(temp_date)
@@ -346,10 +344,11 @@ def get_key_info(line, concat=False):
     #print(first_rec)
     #print("second rec", second_rec)
     #print("third rec", third_rec)
+    
     return first_rec, second_rec, third_rec
 
 
-def get_velocities(first, second, third, line, age, off_period_keep=30, collision_tolerance=0.3, center="Center", window=21, stimulation_type="p6-0", savgol=True, concat=False, save_data=False, get_experiments_order=True):
+def get_velocities(first, second, third, line, age, off_period_keep=30, collision_tolerance=0.3, center="Center", window=21, stimulation_type="p6-0", savgol=True, concat=True, save_data=False):
 
     """
     This function compute the translational velocities of all flies with the ame stimulation protocol using the point provided in center.
@@ -415,13 +414,18 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
     fly_gen = []
     times = []
     experiments_stim_frames = []
+    dv_flips_dict = {}
     fly_nbr = 0
     fpss = []
     experiments=[]
     ratio = 32/832
+
+    ### The fourth trial was not considered for analysis as most experiments only have 3 trials. 
+    keys_to_pass = ["200730_101001_s0a0_p6-0","200811_090722_s0a0_p6-0","200724_091615_s0a0_p6-0","200811_090009_s0a0_p6-0","200820_091654_s0a0_p6-0","200811_091010_s0a0_p6-0","200710_102306_s0a0_p6-0"]
+
+    ### Keys where the automatic detection of dorso-ventral flips failed
     keys_to_skip_dvf = ["200710_124532_s0a0_p6-0","200730_093001_s0a0_p6-0","200717_090558_s0a0_p6-0","200717_090558_s0a0_p6-0","200806_084424_s0a0_p6-0","200724_094302_s0a0_p6-0","200730_093706_s0a0_p6-0","200717_092001_s0a0_p6-0","200717_092001_s0a0_p6-0","200807_090419_s0a0_p6-0","200807_090419_s0a0_p6-0","200714_092630_s0a0_p6-0","200710_121555_s0a0_p6-0","200730_105105_s0a0_p6-0","200717_111201_s0a0_p6-0","200730_105801_s0a0_p6-0","200813_084503_s0a0_p6-0","200626_111806_s0a0_p6-0"]
     
-    #print('line ', line)
     if not concat:
         list_line = [line]
     else:
@@ -451,11 +455,14 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
             age_to_process = third
     
     for exp_i, [exp_key, experiment] in enumerate(experiments) :
+        #print("_".join([fly_gen[exp_i],exp_key]))
         if age is not "all":
             if exp_key not in age_to_process:
-                print("Skipping: experiment from a different age")
+                print(f"Skipping: different age ({exp_key})")
                 continue
-
+        if exp_key in keys_to_pass:
+            print(f"Skipping: fourth trial ({exp_key})")
+            continue
         try:
             if stimulation_type in exp_key:                
                 fps = experiment["fps"]
@@ -477,9 +484,12 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
                         ratio_flips = num_flips/len(experiment[fly][stim]['DorsoVentralFlip'])
                         if exp_key not in keys_to_skip_dvf:
                             if ratio_flips > 0.5:
-                                print(f"Skipping due to dorso-ventral flip = Exp: {fly_gen[exp_i]}-{exp_key}; Fly: {fly_i}; Period: {stim}")
-                                continue
-                        
+                                key_flip = "_".join([fly_gen[exp_i],exp_key])
+                                if key_flip not in dv_flips_dict.keys():
+                                    dv_flips_dict[key_flip] = []
+                                dv_flips_dict[key_flip].append(stim)
+                                #print(f"Skipping dorso-ventral flip = Exp: {fly_gen[exp_i]}-{exp_key}; Fly: {fly_i}; Period: {stim}; key: {key_flip}")
+                            
                         flyn_x.extend(experiment[fly][stim]['trajectories'][center]["x"])
                         flyn_y.extend(experiment[fly][stim]['trajectories'][center]["y"])
                         flyn_theta.extend(experiment[fly][stim]['trajectories'][center]["orientation"])
@@ -543,8 +553,6 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
                     else:
                         max_len = len(vel)
 
-
-
                     time = np.arange(len(vel))/fps
 
                     velocities.append(vel)
@@ -552,7 +560,7 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
                     experiments_stim_frames.append(stim_frame)
                     exp_names.append("_".join([fly_gen[exp_i],exp_key]))
         except Exception as e:
-            print('\nException:' + str(e))
+            #print('\nException computing velocity:' + str(e))
             pass
 
     if save_data:
@@ -567,7 +575,7 @@ def get_velocities(first, second, third, line, age, off_period_keep=30, collisio
         np.save(vel_path+'/velocities_data.npy', vel_data, allow_pickle=True)
 
     
-    return velocities, times, experiments_stim_frames, fpss, exp_names
+    return velocities, times, experiments_stim_frames, fpss, exp_names, dv_flips_dict
     
 
 def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp=True, concat=True):
@@ -611,10 +619,10 @@ def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp
     the parameters in the output file (data)
     """      
 
-    my_indexes = pd.MultiIndex(levels=[[],[],[]], codes=[[],[],[]], names=["Fly_index", "Fly_line", "Stimulation"])
+    my_indexes = pd.MultiIndex(levels=[[],[],[],[]], codes=[[],[],[],[]], names=["Index", "Fly_id", "Fly_line", "Stimulation"])
     my_columns = ["Experiment","Slope[mm/s\u00b2]", "Backward distance traveled [mm]", "Vmin [mm/s]"]
     metrics = pd.DataFrame(index=my_indexes, columns=my_columns, dtype=float)
-
+    
     slope_all = []
     AOC_all = []
     vmin_all = []
@@ -622,11 +630,10 @@ def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp
     line_names=['CWA/all','EF/all','IF/all']
     
     for i, line in enumerate(lines):
-        print(line)
+        #print(line)
         slope_line = []
         AOC_line = []
         vmin_line = []
-        bout_line = []
         try:
             line_split = line.split('/')
         except:
@@ -634,56 +641,57 @@ def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp
         line_name = line_split[-2] + '-' + line_split[-1]
         first, second, third = get_key_info(line, concat=concat)
 
-        velocities, times, experiments_stim_frames, fpss, exp_names = get_velocities(first, second, third, line, age, stimulation_type=stimulation_type, concat=concat)
+        velocities, times, experiments_stim_frames, fpss, exp_names, dv_flips = get_velocities(first, second, third, line, age, stimulation_type=stimulation_type, concat=concat)
         
         plot_velocity(line_names[i], velocities, times, fpss, experiments_stim_frames, age)        
-        
         stim_on = []
         times = np.array(times)
 
-        for key in experiments_stim_frames[0]:
-            if "on" in key:
-                stim_on.append(key)        
+     
+        for e in experiments_stim_frames[:5]:
+            for key in e:
+                if "on" in key and key not in stim_on:
+                    stim_on.append(key)
+        
         for num, on in enumerate(stim_on):
             on_vel = []
+            count = 1
             for i, [vel, on_frames, time] in enumerate(zip(velocities, experiments_stim_frames, times)):
-
+                if exp_names[i] in dv_flips.keys(): 
+                    if on in dv_flips[exp_names[i]]:
+                        print(f"Skipping dorso-ventral flip = Exp: {exp_names[i]}; Period: {on}")
+                        continue
                 if on in on_frames.keys():
                     fly_on_vel = np.array(vel[on_frames[on][0]:on_frames[on][1]])
                     fly_on_time = np.array(time[on_frames[on][0]:on_frames[on][1]])
                 else:
                     continue
 
-                a = get_slope(fly_on_vel, fly_on_time)
-                
-                #AUC = get_AUC(fly_on_vel, fly_on_time)
-                #print("The area under the curve is: {}".format(AUC))
-                AOC = get_AOC(fly_on_vel, fly_on_time)
-                #print("The area above the curve is: {}".format(AOC))
-                vmin, delta_t_vmin = get_min_vel(fly_on_vel, fly_on_time)
-                #print("The minimal velocity is {} attained in {} s ".format(vmin, delta_t_vmin))
-                #dur, start = get_max_dur_neg_vel(fly_on_vel, fly_on_time)
-                #print("Negative velocity is sustained for a maximal duration of {}s starting at sec {} in period {}".format(dur, start, on))
+                a = get_slope(fly_on_vel, fly_on_time)                
+                AOC = get_AOC(fly_on_vel, fly_on_time)                
+                vmin, delta_t_vmin = get_min_vel(fly_on_vel, fly_on_time)                
 
                 data = [exp_names[i], a, AOC, vmin]
-                index = (i, line_name, on)
-                metrics.loc[index, :] = data
+                num_nan = np.count_nonzero(np.isnan(np.array(data[1:])))
+                if num_nan != len(data)-1:
+                    index = (count, i, line_name, on)
+                    metrics.loc[index, :] = data
 
-                slope_line.append(a)
-                AOC_line.append(AOC)
-                vmin_line.append(vmin)
-                #bout_line.append(dur)
+                    slope_line.append(a)
+                    AOC_line.append(AOC)
+                    vmin_line.append(vmin)
+                    count += 1
+                
         slope_all.append(slope_line)
         AOC_all.append(AOC_line)
         vmin_all.append(vmin_line)
-        #bout_all.append(bout_line)
-
+        
     if not os.path.exists("results"):
         os.makedirs("results")
     if bp: 
         metric_cols = metrics.columns
         metric_cols = metric_cols[1:]
-        print("METRICS COLS : ", metric_cols)
+        #print("METRICS COLS : ", metric_cols)
         fig, axs = plt.subplots(nrows=len(metric_cols), ncols=1, figsize=(14,7*len(metric_cols)))
     if agg == "Line":
         metrics.reset_index("Fly_line", inplace=True)
@@ -693,7 +701,7 @@ def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp
         if bp: 
             for ax, col_name in zip(axs, metric_cols):
                 #print("ax",ax,"col_name",col_name)
-                nice_violinplot("Fly_line", col_name, metrics, ax)
+                nice_violinplot("Fly_line", col_name, metrics, ax, colors=['tab:green','tab:blue','tab:orange'])
             fig_name = f"{line_name}_lines_metrics_{stimulation_type}_{age}"
     if bp:
         fig.suptitle("Distribution of velocity metrics")
@@ -704,14 +712,17 @@ def plot_metrics(lines, age = "all", stimulation_type = "p6-0", agg = "Line", bp
         fig.savefig(os.path.join("results", fig_name+"_clean.pdf"),dpi=300)
         plt.close()
     metrics.to_csv(os.path.join("results", "Lines_Metrics_allexcept4threc{}.csv".format(stimulation_type)))
-
+    #df_slope = pd.DataFrame(slope_all).T.to_csv(os.path.join("results", "Lines_slope_allexcept4threc{}.csv".format(stimulation_type)))
+    
+    #df_aoc = pd.DataFrame(AOC_all).T.to_csv(os.path.join("results", "Lines_aoc_allexcept4threc{}.csv".format(stimulation_type)))
+    
+    #df_vmin = pd.DataFrame(vmin_all).T.to_csv(os.path.join("results", "Lines_vmin_allexcept4threc{}.csv".format(stimulation_type)))
+    
     return [slope_all, AOC_all, vmin_all]
 
 def run_statistic_analysis(label, metric):
-
-    metric = [[x for x in y if not np.isnan(x)] for y in metric]
     
     print(f"{label} kruskal ", stats.kruskal(metric[0],metric[1],metric[2],nan_policy="omit"))
     
-    print(f"{label} post hoc conover", sp.posthoc_conover(np.array([metric[0],metric[1],metric[2]]),p_adjust='holm'))
+    print(f"{label} post hoc conover", sp.posthoc_conover(np.array([metric[0],metric[1],metric[2]],dtype=object),p_adjust='holm'))
     
