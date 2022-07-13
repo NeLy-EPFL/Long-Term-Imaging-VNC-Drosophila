@@ -5,3 +5,6 @@ The associated data that can be downloaded [here](https://dataverse.harvard.edu/
 
 **License**:
 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
+**DOI**:
+https://doi.org/10.5281/zenodo.6826488
