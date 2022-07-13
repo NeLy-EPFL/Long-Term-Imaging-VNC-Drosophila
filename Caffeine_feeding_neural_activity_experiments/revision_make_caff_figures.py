@@ -125,12 +125,12 @@ def statistics_figure(flies, normalise=0.99, n_norm=2, test=mannwhitneyu):
     # compute p values of statistical tests
     ps_high_vs_low = []
     for i in range(1,N_test):
-        p = test(quantile_high[i,:], quantile_low[i,:]).pvalue
+        p = test(quantile_high[i,:], quantile_low[i,:], alternative="greater").pvalue
         ps_high_vs_low.append(p)
     
     ps_high_vs_sucr = []
     for i in range(1,N_test):
-        p = test(quantile_high[i,:], quantile_sucr[i,:]).pvalue
+        p = test(quantile_high[i,:], quantile_sucr[i,:], alternative="greater").pvalue
         ps_high_vs_sucr.append(p)
 
     fig, ax = plt.subplots(1,1,figsize=(6,4))
