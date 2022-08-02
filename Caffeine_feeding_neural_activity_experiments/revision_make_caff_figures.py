@@ -210,10 +210,10 @@ def main():
     datestring = datetime.now().strftime("%Y%m%d_%H%M")
     
     with PdfPages(os.path.join(OUTPUT_PATH, f"_wave_figures_revision_{datestring}.pdf")) as pdf:  # nnorm3_
-        # fig = trial_wave_figure()
+        fig = trial_wave_figure()
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_1.eps'), format='eps')
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_1.pdf'), transparent=True)
-        # pdf.savefig(fig)
+        pdf.savefig(fig)
         
         fig = statistics_figure(flies=deepcopy(all_flies))
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_2.eps'), format='eps')
