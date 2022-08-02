@@ -122,6 +122,10 @@ def statistics_figure(flies, normalise=0.99, n_norm=2, test=mannwhitneyu):
     quantile_low = quantile_concat[["low" in fly.paper_condition for fly in flies]].T
     quantile_sucr = quantile_concat[["sucr" in fly.paper_condition for fly in flies]].T
 
+    np.savetxt(os.path.join(OUTPUT_PATH, f"stats_highcaff_{datestring}.csv"), quantile_high, delimiter=",")
+    np.savetxt(os.path.join(OUTPUT_PATH, f"stats_lowcaff_{datestring}.csv"), quantile_low, delimiter=",")
+    np.savetxt(os.path.join(OUTPUT_PATH, f"stats_sucrose_{datestring}.csv"), quantile_sucr, delimiter=",")
+
     # compute p values of statistical tests
     ps_high_vs_low = []
     for i in range(1,N_test):
@@ -202,20 +206,21 @@ def spontaneous_fluctuation_figure(fly, i_trial=0, normalise=0.99, n_norm=2, N_d
 
 
 def main():
+    global datestring
     datestring = datetime.now().strftime("%Y%m%d_%H%M")
     
     with PdfPages(os.path.join(OUTPUT_PATH, f"_wave_figures_revision_{datestring}.pdf")) as pdf:  # nnorm3_
-        fig = trial_wave_figure()
+        # fig = trial_wave_figure()
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_1.eps'), format='eps')
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_1.pdf'), transparent=True)
-        pdf.savefig(fig)
+        # pdf.savefig(fig)
         
         fig = statistics_figure(flies=deepcopy(all_flies))
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_2.eps'), format='eps')
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_2.pdf'), transparent=True)
         pdf.savefig(fig)
         
-        fig = spontaneous_fluctuation_figure(deepcopy(all_flies[0]))
+        # fig = spontaneous_fluctuation_figure(deepcopy(all_flies[0]))
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_3.eps'), format='eps')
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_3.pdf'), transparent=True)
         pdf.savefig(fig)
