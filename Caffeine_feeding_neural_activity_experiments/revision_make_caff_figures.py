@@ -220,7 +220,7 @@ def main():
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_2.pdf'), transparent=True)
         pdf.savefig(fig)
         
-        # fig = spontaneous_fluctuation_figure(deepcopy(all_flies[0]))
+        fig = spontaneous_fluctuation_figure(deepcopy(all_flies[0]))
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_3.eps'), format='eps')
         # fig.savefig(os.path.join(OUTPUT_PATH, f'_wave_figures_revision_{datestring}_3.pdf'), transparent=True)
         pdf.savefig(fig)
